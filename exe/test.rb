@@ -1,3 +1,6 @@
+require 'dotenv'
+Dotenv.load
+
 require 'xingAPI'
 require 'xingAPI/win32'
 require 'ffi'
@@ -298,7 +301,7 @@ result = XingAPI.ETK_Connect(hwnd, "hts.etrade.co.kr", 20001, 1024, -1, 512)
 # result = XingAPI.ETK_Connect(hwnd, "demo.etrade.co.kr", 20001, 1024, -1, 512)
 p ['connect: ', result]
 
-result = XingAPI.ETK_Login(hwnd, 'ermaker', 'test', 'test', 0, false)
+result = XingAPI.ETK_Login(hwnd, ENV['ID'], ENV['PASS'], ENV['PASS2'], 0, false)
 p ['try_login', result]
 
 win.pump_up
