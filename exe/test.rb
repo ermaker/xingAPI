@@ -1,3 +1,4 @@
+require 'xingAPI'
 require 'xingAPI/win32'
 require 'ffi'
 
