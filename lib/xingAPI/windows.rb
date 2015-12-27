@@ -18,7 +18,10 @@ module XingAPI
 
       @window_class = Win32::WNDCLASSEX.new
       @window_class[:style]         = Win32::CS_HREDRAW | Win32::CS_VREDRAW
-      @window_class[:lpfnWndProc]   = blk
+      @window_class[:lpfnWndProc]   = Proc.new do |*args|
+        blk.call(*args)
+        Win32::DefWindowProc(*args)
+      end
       @window_class[:hInstance]     = instance
       @window_class[:hbrBackground] = Win32::COLOR_WINDOW
       @window_class[:lpszClassName] =
