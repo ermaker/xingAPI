@@ -12,32 +12,42 @@ module XingAPI
         @win = Windows.new do |*args|
           ::XingAPI::logger.debug { "args: #{args}" }
           Fiber.yield(*args)
-          Windows::Win32::DefWindowProc(*args).tap { Fiber.yield(:nop) }
         end
-        Fiber.yield(:hwnd)
-        @win.pump_up(time: nil)
+        :hwnd
       end
       resume { |sig,| sig == :hwnd }
       ::XingAPI::logger.debug { "hwnd: #{hwnd}" }
     end
 
+    def pump
+      @fiber = Fiber.new do
+        @win.pump_up(time: nil)
+        :finish
+      end
+
+      yield self
+    ensure
+      resume_finish
+    end
+
     def resume
       loop do
         value = @fiber.resume
-        break value if yield(value)
+        if yield(value)
+          @win.finish!
+          break value
+        end
       end
     end
 
-    def resume_nop
-      resume { |sig,| sig == :nop }.tap do
-        ::XingAPI::logger.debug { 'resume_nop' }
-      end
+    def resume_finish
+      resume { |sig,| sig == :finish }
     end
 
     def resume_login
       resume do |hwnd_, msgid, _, _|
         hwnd == hwnd_ && msgid == 1024 + 5
-      end.tap { resume_nop }
+      end
     end
   end
 end

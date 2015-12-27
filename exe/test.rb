@@ -218,7 +218,6 @@ win = XingAPI::Windows.new do |hwnd, msgid, wparam, lparam|
       puts "XXXX"
     end
   end
-  ::XingAPI::Windows::Win32::DefWindowProc(hwnd, msgid, wparam, lparam)
 end
 hwnd = win.window
 

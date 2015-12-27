@@ -10,6 +10,12 @@ module XingAPI
     attr_accessor :window
     alias_method :hwnd, :window
 
+    attr_accessor :finish
+
+    def finish!
+      @finish = true
+    end
+
     # Sets up access to Skype
     #
     # @see http://msdn.microsoft.com/en-us/library/bb384843.aspx Creating
@@ -19,7 +25,12 @@ module XingAPI
 
       @window_class = Win32::WNDCLASSEX.new
       @window_class[:style]         = Win32::CS_HREDRAW | Win32::CS_VREDRAW
-      @window_class[:lpfnWndProc]   = blk
+      @window_class[:lpfnWndProc]   =
+        Proc.new do |*args|
+          blk.call(*args)
+          Win32::DefWindowProc(*args)
+        end
+
       @window_class[:hInstance]     = instance
       @window_class[:hbrBackground] = Win32::COLOR_WINDOW
       @window_class[:lpszClassName] =
@@ -43,15 +54,16 @@ module XingAPI
     def tick
       msg = Win32::MSG.new
       while Win32::PeekMessage(msg, Win32::NULL, 0, 0, Win32::PM_REMOVE) > 0
-        # puts "WAIT: #{msg[:hwnd]}, #{msg[:message]}, #{msg[:wParam]}, #{msg[:lParam]}"
         Win32::TranslateMessage(msg)
         Win32::DispatchMessage(msg)
       end
     end
 
     def pump_up(time: 1)
+      @finish = false
       step = 0.01
       (time ? (time / step).to_i.times : loop).each do
+        break if @finish
         tick
         sleep step
       end
