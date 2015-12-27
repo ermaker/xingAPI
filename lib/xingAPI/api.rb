@@ -15,27 +15,34 @@ module XingAPI
 
     def connect
       result = XingAPI.ETK_Connect(hwnd, "hts.etrade.co.kr", 20001, 1024, -1, 512)
-      p ['connect: ', result]
+      ::XingAPI::logger.debug { "connect: #{result}" }
       yield
     ensure
       XingAPI.ETK_Disconnect
+      ::XingAPI::logger.debug { 'disconnect' }
+    end
+
+    def pointer_to_string(pointer)
+      FFI::Pointer.new(pointer).read_string.force_encoding('cp949')
     end
 
     def login
       result = XingAPI.ETK_Login(hwnd, ENV['ID'], ENV['PASS'], ENV['PASS2'], 0, false)
-      p ['try_login', result]
+      ::XingAPI::logger.debug { "login: #{result}" }
 
-      @win.resume_login.tap do |_, _, wparam, lparam|
-        puts 'WM_LOGIN'
-        message = [wparam, lparam].map do |param|
-          FFI::Pointer.new(:string, param).read_string.force_encoding('cp949')
-        end.join(': ')
-        puts message
+      _, _, wparam, lparam = @win.resume_login
+      message = [wparam, lparam].map { |param| pointer_to_string(param) }.join(': ')
+      ::XingAPI::logger.info { "login: #{message}" }
+
+      unless pointer_to_string(wparam) == '0000'
+        ::XingAPI::logger.error { "login: #{message}" }
+        return
       end
 
       yield
     ensure
       XingAPI.ETK_Logout(hwnd)
+      ::XingAPI::logger.debug { "logout: #{hwnd}" }
     end
   end
 end

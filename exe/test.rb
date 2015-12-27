@@ -218,6 +218,7 @@ win = XingAPI::Windows.new do |hwnd, msgid, wparam, lparam|
       puts "XXXX"
     end
   end
+  ::XingAPI::Windows::Win32::DefWindowProc(hwnd, msgid, wparam, lparam)
 end
 hwnd = win.window
 
@@ -229,20 +230,22 @@ p ['try_login', result]
 
 win.pump_up
 
-require 'ffi'
+if false
+  require 'ffi'
 
-class T1901 < FFI::Struct
-  pack 1
-  layout :shcode, [:char, 6]
+  class T1901 < FFI::Struct
+    pack 1
+    layout :shcode, [:char, 6]
+  end
+
+  t1901 = T1901.new
+  t1901[:shcode].to_ptr.write_string('122630')
+
+  request_id = XingAPI::XingAPI.ETK_Request(hwnd, 't1901', t1901, t1901.size, false, nil, 1)
+  puts "request_id: #{request_id}"
+
+  win.pump_up
 end
-
-t1901 = T1901.new
-t1901[:shcode].to_ptr.write_string('122630')
-
-request_id = XingAPI::XingAPI.ETK_Request(hwnd, 't1901', t1901, t1901.size, false, nil, 1)
-puts "request_id: #{request_id}"
-
-win.pump_up(time: 2)
 
 if false
   count = XingAPI::XingAPI.ETK_GetAccountListCount()
