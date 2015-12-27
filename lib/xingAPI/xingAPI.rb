@@ -13,8 +13,11 @@ module XingAPI
     attach_function :ETK_Login, [:ulong, :string, :string, :string, :int, :bool], :bool
     attach_function :ETK_Logout, [:ulong], :bool
 
-    attach_function :ETK_GetAccountListCount, [], :int
+    attach_function :ETK_Request, [:ulong, :string, :pointer, :int, :bool, :string, :int], :int
+    attach_function :ETK_ReleaseRequestData, [:int], :void
+    attach_function :ETK_ReleaseMessageData, [:long], :void
 
+    attach_function :ETK_GetAccountListCount, [], :int
     attach_function :ETK_GetAccountList, [:int, :pointer, :int], :bool
 
     attach_function :ETK_GetClientIP, [:pointer], :void
