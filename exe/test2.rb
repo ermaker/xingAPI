@@ -4,22 +4,15 @@ Dotenv.load
 require 'xingAPI'
 require 'xingAPI/xingAPI'
 require 'xingAPI/fibered_windows'
+require 'xingAPI/api'
 
-win = XingAPI::FiberedWindows.new
-hwnd = win.hwnd
+XingAPI::API.new do
+  count = XingAPI::XingAPI.ETK_GetAccountListCount()
+  p ['account list count', count]
 
-result = XingAPI::XingAPI.ETK_Connect(hwnd, "hts.etrade.co.kr", 20001, 1024, -1, 512)
-p ['connect: ', result]
-
-result = XingAPI::XingAPI.ETK_Login(hwnd, ENV['ID'], ENV['PASS'], ENV['PASS2'], 0, false)
-p ['try_login', result]
-
-_, _, wparam, lparam = win.resume_login
-puts 'WM_LOGIN'
-message = [wparam, lparam].map do |param|
-  FFI::Pointer.new(:string, param).read_string.force_encoding('cp949')
-end.join(': ')
-puts message
-
-XingAPI::XingAPI.ETK_Logout(hwnd)
-XingAPI::XingAPI.ETK_Disconnect
+  count.times do |idx|
+    out = FFI::MemoryPointer.new(256)
+    XingAPI::XingAPI.ETK_GetAccountList(idx, out, out.size)
+    p out.read_string
+  end
+end
