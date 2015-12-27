@@ -8,6 +8,7 @@ module XingAPI
   # This protocol is only available on Windows and Cygwin.
   class Windows
     attr_accessor :window
+    alias_method :hwnd, :window
 
     # Sets up access to Skype
     #
@@ -53,7 +54,7 @@ module XingAPI
 
     def pump_up(time: 1)
       step = 0.01
-      (time / step).to_i.times do
+      (time ? (time / step).to_i.times : loop).each do
         tick
         sleep step
       end
