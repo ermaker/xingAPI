@@ -8,9 +8,9 @@ module XingAPI
       @win.hwnd
     end
 
-    def initialize
+    def initialize(id, pass, pass2)
       @win = FiberedWindows.new
-      connect { login { yield self } }
+      connect { login(id, pass, pass2) { yield self } }
     end
 
     def connect
@@ -32,8 +32,8 @@ module XingAPI
       FFI::Pointer.new(pointer).read_string.force_encoding('cp949')
     end
 
-    def login
-      result = XingAPI.ETK_Login(hwnd, ENV['ID'], ENV['PASS'], ENV['PASS2'], 0, false)
+    def login(id, pass, pass2)
+      result = XingAPI.ETK_Login(hwnd, id, pass, pass2, 0, false)
       ::XingAPI::logger.debug { "login: #{result}" }
       unless result
         ::XingAPI::logger.error { "login: #{result}" }
