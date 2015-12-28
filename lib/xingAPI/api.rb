@@ -42,8 +42,8 @@ module XingAPI
 
       _, _, wparam, lparam = @win.resume_login
       result = [wparam, lparam].map { |param| pointer_to_string(param) }
-      message = "[#{result[0]}] result[1]"
-      ::XingAPI::logger.info { "login: #{message}" }
+      message = "[#{result[0]}] #{result[1]}"
+      ::XingAPI::logger.debug { "login: #{message}" }
 
       unless pointer_to_string(wparam) == '0000'
         ::XingAPI::logger.error { "login: #{message}" }
@@ -54,6 +54,42 @@ module XingAPI
     ensure
       XingAPI.ETK_Logout(hwnd)
       ::XingAPI::logger.debug { "logout: #{hwnd}" }
+    end
+
+    def tr_t1901(shcode)
+      result = nil
+      t1901 = STRUCT_t1901InBlock.new
+      t1901[:shcode].to_ptr.write_string(shcode)
+
+      request_id = XingAPI.ETK_Request(hwnd, 't1901', t1901, t1901.size, false, nil, 1)
+      ::XingAPI::logger.debug { "request_id: #{request_id}" }
+
+      loop do
+        _, _, wparam, lparam = @win.resume { |_, msgid, _, _| msgid == 1024 + 3}
+        ::XingAPI::logger.debug { "WM_RECEIVE_DATA:" }
+        case wparam
+        when 1
+          ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Data" }
+          recv = RECV_PACKET.of(lparam)
+          ::XingAPI::logger.debug { recv.to_s }
+          result = recv.data.to_hash
+          ::XingAPI::logger.debug { result.to_s }
+        when 2, 3
+          ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Message" }
+          msg = MSG_PACKET.of(lparam)
+          ::XingAPI::logger.debug { msg.to_s }
+
+          XingAPI.ETK_ReleaseMessageData(lparam)
+        when 4
+          ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Release" }
+          XingAPI.ETK_ReleaseRequestData(lparam)
+          break
+        else
+          ::XingAPI::logger.error { "Unknown case! wpararm: #{wparam}" }
+        end
+      end
+
+      return result
     end
   end
 end
