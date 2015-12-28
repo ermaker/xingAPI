@@ -33,8 +33,8 @@ module XingAPI
     def szBlockName; self[:szBlockName].to_ptr.read_string; end
     def lpData; self[:lpData]; end
 
-    def data
-      ::XingAPI.const_get("STRUCT_#{szBlockName}").of(lpData)
+    def data(block_name: szBlockName)
+      ::XingAPI.const_get("STRUCT_#{block_name}").of(lpData)
     end
 
     def to_s

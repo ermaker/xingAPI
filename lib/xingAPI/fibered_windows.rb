@@ -1,4 +1,5 @@
 require 'xingAPI/windows'
+require 'fiber'
 
 module XingAPI
   class FiberedWindows

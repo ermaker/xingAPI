@@ -229,7 +229,7 @@ p ['try_login', result]
 
 win.pump_up
 
-if true
+if false
   require 'ffi'
 
   class T1901 < FFI::Struct
@@ -268,6 +268,8 @@ if false
   XingAPI::XingAPI.ETK_GetServerName(out)
   p out.read_string
 end
+
+exit
 
 XingAPI::XingAPI.ETK_Logout(hwnd)
 XingAPI::XingAPI.ETK_Disconnect
