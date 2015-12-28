@@ -229,7 +229,7 @@ p ['try_login', result]
 
 win.pump_up
 
-if false
+if true
   require 'ffi'
 
   class T1901 < FFI::Struct
