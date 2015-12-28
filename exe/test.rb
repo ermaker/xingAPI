@@ -219,7 +219,7 @@ win = XingAPI::Windows.new do |hwnd, msgid, wparam, lparam|
     end
   end
 end
-hwnd = win.window
+hwnd = win.hwnd
 
 result = XingAPI::XingAPI.ETK_Connect(hwnd, "hts.etrade.co.kr", 20001, 1024, -1, 512)
 p ['connect: ', result]

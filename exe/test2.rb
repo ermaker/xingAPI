@@ -95,9 +95,4 @@ XingAPI::API.new(ENV['IP'], ENV['PORT'], ENV['ID'], ENV['PASS'], ENV['PASS2']) d
       sleep 4
     end
   end
-
-  if true
-    fiber = api.instance_eval('@win').instance_eval('@fiber')
-    p fiber.alive?
-  end
 end

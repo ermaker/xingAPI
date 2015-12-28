@@ -4,9 +4,9 @@ require 'ffi'
 
 module XingAPI
   class API
-    def hwnd
-      @win.hwnd
-    end
+    extend Forwardable
+    attr_reader :win
+    def_delegators :@win, :hwnd
 
     def initialize(ip, port, id, pass, pass2)
       @win = FiberedWindows.new

@@ -1,12 +1,11 @@
 require 'xingAPI/windows'
-require 'fiber'
+require 'forwardable'
 
 module XingAPI
   class FiberedWindows
+    extend Forwardable
     attr_reader :win
-    def hwnd
-      @win.hwnd
-    end
+    def_delegators :@win, :hwnd
 
     def initialize
       @fiber = Fiber.new do
@@ -18,9 +17,9 @@ module XingAPI
             ::XingAPI::logger.warn { 'FiberError' }
           end
         end
-        :hwnd
+        :finish
       end
-      resume_ { |sig,| sig == :hwnd }
+      resume_finish
       ::XingAPI::logger.debug { "hwnd: #{hwnd}" }
     end
 

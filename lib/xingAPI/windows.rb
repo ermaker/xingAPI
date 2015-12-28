@@ -7,11 +7,8 @@ module XingAPI
   #
   # This protocol is only available on Windows and Cygwin.
   class Windows
-    attr_accessor :window
-    alias_method :hwnd, :window
-
+    attr_reader :hwnd
     attr_accessor :finish
-
     def finish!
       @finish = true
     end
@@ -36,7 +33,7 @@ module XingAPI
       @window_class[:lpszClassName] =
           FFI::MemoryPointer.from_string 'xingAPI-ruby'
 
-      @window = Win32::CreateWindowEx(Win32::WS_EX_LEFT,
+      @hwnd = Win32::CreateWindowEx(Win32::WS_EX_LEFT,
                                       FFI::Pointer.new(@window_class.handle),
                                       'xingAPI-ruby',
                                       Win32::WS_OVERLAPPEDWINDOW,
