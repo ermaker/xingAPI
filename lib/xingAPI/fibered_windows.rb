@@ -15,22 +15,22 @@ module XingAPI
         end
         :hwnd
       end
-      resume { |sig,| sig == :hwnd }
+      resume_ { |sig,| sig == :hwnd }
       ::XingAPI::logger.debug { "hwnd: #{hwnd}" }
     end
 
-    def pump
+    def resume(&blk)
       @fiber = Fiber.new do
         @win.pump_up(time: nil)
         :finish
       end
 
-      yield self
+      resume_(&blk)
     ensure
       resume_finish
     end
 
-    def resume
+    def resume_
       loop do
         value = @fiber.resume
         if yield(value)
@@ -41,7 +41,7 @@ module XingAPI
     end
 
     def resume_finish
-      resume { |sig,| sig == :finish }
+      resume_ { |sig,| sig == :finish }
     end
 
     def resume_login

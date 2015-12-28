@@ -40,15 +40,13 @@ module XingAPI
         return
       end
 
-      @win.pump do |win|
-        _, _, wparam, lparam = win.resume_login
-        message = [wparam, lparam].map { |param| pointer_to_string(param) }.join(': ')
-        ::XingAPI::logger.info { "login: #{message}" }
+      _, _, wparam, lparam = @win.resume_login
+      message = [wparam, lparam].map { |param| pointer_to_string(param) }.join(': ')
+      ::XingAPI::logger.info { "login: #{message}" }
 
-        unless pointer_to_string(wparam) == '0000'
-          ::XingAPI::logger.error { "login: #{message}" }
-          return
-        end
+      unless pointer_to_string(wparam) == '0000'
+        ::XingAPI::logger.error { "login: #{message}" }
+        return
       end
 
       yield
