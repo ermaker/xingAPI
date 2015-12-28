@@ -20,7 +20,10 @@ XingAPI::API.new do |api|
   end
 
   if true
-    data = api.tr_t1901('122630')
-    ::XingAPI::logger.info { "#{data[:hname].strip}: #{data[:price]} (#{data[:diff]}%)" }
+    3.times do
+      data = api.tr_t1901('122630')
+      ::XingAPI::logger.info { "#{data[:hname].strip}: #{data[:price]} (#{data[:diff]}%)" }
+      sleep 4
+    end
   end
 end
