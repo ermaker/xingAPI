@@ -8,13 +8,13 @@ module XingAPI
       @win.hwnd
     end
 
-    def initialize(id, pass, pass2)
+    def initialize(ip, port, id, pass, pass2)
       @win = FiberedWindows.new
-      connect { login(id, pass, pass2) { yield self } }
+      connect(ip, port) { login(id, pass, pass2) { yield self } }
     end
 
-    def connect
-      result = XingAPI.ETK_Connect(hwnd, "hts.etrade.co.kr", 20001, 1024, -1, 512)
+    def connect(ip, port)
+      result = XingAPI.ETK_Connect(hwnd, ip, port.to_i, 1024, -1, 512)
       ::XingAPI::logger.debug { "connect: #{result}" }
 
       unless result

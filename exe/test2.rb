@@ -6,7 +6,7 @@ require 'xingAPI/xingAPI'
 require 'xingAPI/api'
 require 'xingAPI/data'
 
-XingAPI::API.new(ENV['ID'], ENV['PASS'], ENV['PASS2']) do |api|
+XingAPI::API.new(ENV['IP'], ENV['PORT'], ENV['ID'], ENV['PASS'], ENV['PASS2']) do |api|
   if false
     count = XingAPI::XingAPI.ETK_GetAccountListCount()
     ::XingAPI::logger.info { "AccountListCount: #{count}" }
