@@ -10,7 +10,7 @@ module XingAPI
 
     def initialize
       @win = FiberedWindows.new
-      connect { login { yield } }
+      connect { login { yield self } }
     end
 
     def connect
@@ -41,7 +41,8 @@ module XingAPI
       end
 
       _, _, wparam, lparam = @win.resume_login
-      message = [wparam, lparam].map { |param| pointer_to_string(param) }.join(': ')
+      result = [wparam, lparam].map { |param| pointer_to_string(param) }
+      message = "[#{result[0]}] result[1]"
       ::XingAPI::logger.info { "login: #{message}" }
 
       unless pointer_to_string(wparam) == '0000'

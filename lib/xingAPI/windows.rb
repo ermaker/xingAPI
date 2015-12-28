@@ -53,7 +53,7 @@ module XingAPI
     # @return [void]
     def tick
       msg = Win32::MSG.new
-      while Win32::PeekMessage(msg, Win32::NULL, 0, 0, Win32::PM_REMOVE) > 0
+      if Win32::PeekMessage(msg, Win32::NULL, 0, 0, Win32::PM_REMOVE) > 0
         Win32::TranslateMessage(msg)
         Win32::DispatchMessage(msg)
       end

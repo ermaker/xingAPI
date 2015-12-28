@@ -11,7 +11,11 @@ module XingAPI
       @fiber = Fiber.new do
         @win = Windows.new do |*args|
           ::XingAPI::logger.debug { "args: #{args}" }
-          Fiber.yield(*args)
+          begin
+            Fiber.yield(*args)
+          rescue FiberError
+            ::XingAPI::logger.warn { 'FiberError' }
+          end
         end
         :hwnd
       end
