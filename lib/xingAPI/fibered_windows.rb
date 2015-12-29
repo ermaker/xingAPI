@@ -10,7 +10,7 @@ module XingAPI
     def initialize
       @fiber = Fiber.new do
         @win = Windows.new do |*args|
-          ::XingAPI::logger.debug { "args: #{args}" }
+          ::XingAPI::logger.debug { "WM: #{args}" }
           begin
             Fiber.yield(*args)
           rescue FiberError

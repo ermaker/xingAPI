@@ -63,11 +63,18 @@ module XingAPI
     def lpData; self[:lpData]; end
 
     def data
-      ::XingAPI.const_get("STRUCT_#{szTrCode}OutBlock").of(lpData)
+      klass = ::XingAPI.const_get("STRUCT_#{szTrCode}OutBlock")
+      if nDataLength != klass.size
+        ::XingAPI::logger.warn do
+          'Size is different:' \
+          "nDataLength(#{nDataLength}) != klass.size(#{klass.size})"
+        end
+      end
+      klass.of(lpData)
     end
 
     def to_s
-      "#{szBlockName}"
+      %{[#{szTrCode}] "#{szBlockName}" (#{nDataLength})}
     end
 
     def self.of(pointer)

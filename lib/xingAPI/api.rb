@@ -58,61 +58,37 @@ module XingAPI
     end
 
     def tr_t1901(shcode)
-      result = nil
-      t1901 = STRUCT_t1901InBlock.new
-      t1901[:shcode].to_ptr.write_string(shcode)
-
-      request_id = XingAPI.ETK_Request(hwnd, 't1901', t1901, t1901.size, false, nil, 1)
-      ::XingAPI::logger.debug { "request_id: #{request_id}" }
-
-      loop do
-        _, _, wparam, lparam = @win.resume { |_, msgid, _, _| msgid == 1024 + 3}
-        ::XingAPI::logger.debug { "WM_RECEIVE_DATA:" }
-        case wparam
-        when 1
-          ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Data" }
-          recv = RECV_PACKET.of(lparam)
-          ::XingAPI::logger.debug { recv.to_s }
-          result = recv.data.to_hash
-          ::XingAPI::logger.debug { result.to_s }
-        when 2, 3
-          ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Message" }
-          msg = MSG_PACKET.of(lparam)
-          ::XingAPI::logger.debug { msg.to_s }
-
-          XingAPI.ETK_ReleaseMessageData(lparam)
-        when 4
-          ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Release" }
-          XingAPI.ETK_ReleaseRequestData(lparam)
-          break
-        else
-          ::XingAPI::logger.error { "Unknown case! wpararm: #{wparam}" }
-        end
+      tr('t1901') do |in_block|
+        in_block[:shcode].to_ptr.write_string(shcode)
       end
-
-      return result
     end
 
     SELL_OR_BUY = {sell: '1', buy: '2'}
 
     def tr_CSPAT00600(account, account_pass, shcode, qty, sell_or_buy)
+      tr('CSPAT00600') do |in_block|
+        tr_name = 'CSPAT00600'
+        price = 0
+        in_block[:"STRUCT_#{tr_name}InBlock1"][:AcntNo].to_ptr.write_string(account.ljust(20))
+        in_block[:"STRUCT_#{tr_name}InBlock1"][:InptPwd].to_ptr.write_string(account_pass.ljust(8))
+        in_block[:"STRUCT_#{tr_name}InBlock1"][:IsuNo].to_ptr.write_string("A#{shcode}".ljust(12))
+        in_block[:"STRUCT_#{tr_name}InBlock1"][:OrdQty].to_ptr.write_string(format('%016d', qty))
+        in_block[:"STRUCT_#{tr_name}InBlock1"][:OrdPrc].to_ptr.write_string(format('%013.2f', price))
+        in_block[:"STRUCT_#{tr_name}InBlock1"][:BnsTpCode].to_ptr.write_string(SELL_OR_BUY.fetch(sell_or_buy))
+        in_block[:"STRUCT_#{tr_name}InBlock1"][:OrdprcPtnCode].to_ptr.write_string('03')
+        in_block[:"STRUCT_#{tr_name}InBlock1"][:MgntrnCode].to_ptr.write_string('000')
+        in_block[:"STRUCT_#{tr_name}InBlock1"][:LoanDt].to_ptr.write_string('00000000')
+        in_block[:"STRUCT_#{tr_name}InBlock1"][:OrdCndiTpCode].to_ptr.write_string('0')
+      end
+    end
+
+    def tr(tr_name)
       result = nil
 
-      price = 0
+      in_block = ::XingAPI.const_get(:"STRUCT_#{tr_name}InBlock").new
+      yield in_block
 
-      order = STRUCT_CSPAT00600InBlock.new
-      order[:STRUCT_CSPAT00600InBlock1][:AcntNo].to_ptr.write_string(account.ljust(20))
-      order[:STRUCT_CSPAT00600InBlock1][:InptPwd].to_ptr.write_string(account_pass.ljust(8))
-      order[:STRUCT_CSPAT00600InBlock1][:IsuNo].to_ptr.write_string("A#{shcode}".ljust(12))
-      order[:STRUCT_CSPAT00600InBlock1][:OrdQty].to_ptr.write_string(format('%016d', qty))
-      order[:STRUCT_CSPAT00600InBlock1][:OrdPrc].to_ptr.write_string(format('%013.2f', price))
-      order[:STRUCT_CSPAT00600InBlock1][:BnsTpCode].to_ptr.write_string(SELL_OR_BUY.fetch(sell_or_buy))
-      order[:STRUCT_CSPAT00600InBlock1][:OrdprcPtnCode].to_ptr.write_string('03')
-      order[:STRUCT_CSPAT00600InBlock1][:MgntrnCode].to_ptr.write_string('000')
-      order[:STRUCT_CSPAT00600InBlock1][:LoanDt].to_ptr.write_string('00000000')
-      order[:STRUCT_CSPAT00600InBlock1][:OrdCndiTpCode].to_ptr.write_string('0')
-
-      request_id = XingAPI.ETK_Request(hwnd, 'CSPAT00600', order, order.size, false, nil, 1)
+      request_id = XingAPI.ETK_Request(hwnd, tr_name, in_block, in_block.size, false, nil, 1)
       ::XingAPI::logger.debug { "request_id: #{request_id}" }
 
       loop do
@@ -122,12 +98,9 @@ module XingAPI
         when 1
           ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Data" }
           recv = RECV_PACKET.of(lparam)
-          ::XingAPI::logger.debug { recv.to_s }
-          ::XingAPI::logger.debug { "recv.szTrCode: #{recv.szTrCode}" }
-          ::XingAPI::logger.debug { "recv.nDataMode: #{recv.nDataMode}" }
-          ::XingAPI::logger.debug { "recv.nDataLength: #{recv.nDataLength}" }
+          ::XingAPI::logger.debug { "recv: #{recv}" }
           result = recv.data.to_hash
-          ::XingAPI::logger.debug { "result: #{result.to_s}" }
+          ::XingAPI::logger.debug { "result: #{result}" }
         when 2
           ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Message" }
           msg = MSG_PACKET.of(lparam)
@@ -140,8 +113,7 @@ module XingAPI
           XingAPI.ETK_ReleaseMessageData(lparam)
           break
         when 4
-          ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Release" }
-          ::XingAPI::logger.debug { "request_id : #{lparam}" }
+          ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Release (#{lparam})" }
           XingAPI.ETK_ReleaseRequestData(lparam)
           break
         else
