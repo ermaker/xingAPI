@@ -92,5 +92,74 @@ module XingAPI
 
       return result
     end
+
+    SELL_OR_BUY = {sell: '1', buy: '2'}
+
+    def tr_CSPAT00600(account, account_pass, shcode, qty, sell_or_buy)
+      result = nil
+
+      price = 0
+
+      order = STRUCT_CSPAT00600InBlock1.new
+      order[:AcntNo].to_ptr.write_string(account.ljust(20))
+      order[:InptPwd].to_ptr.write_string(account_pass.ljust(8))
+      order[:IsuNo].to_ptr.write_string("A#{shcode}".ljust(12))
+      order[:OrdQty].to_ptr.write_string(format('%016d', qty))
+      order[:OrdPrc].to_ptr.write_string(format('%013.2f', price))
+      order[:BnsTpCode].to_ptr.write_string(SELL_OR_BUY.fetch(sell_or_buy))
+      order[:OrdprcPtnCode].to_ptr.write_string('03')
+      order[:MgntrnCode].to_ptr.write_string('000')
+      order[:LoanDt].to_ptr.write_string('00000000')
+      order[:OrdCndiTpCode].to_ptr.write_string('0')
+
+      request_id = XingAPI.ETK_Request(hwnd, 'CSPAT00600', order, order.size, false, nil, 1)
+      ::XingAPI::logger.debug { "request_id: #{request_id}" }
+
+      loop do
+        _, _, wparam, lparam = @win.resume { |_, msgid, _, _| msgid == 1024 + 3}
+        ::XingAPI::logger.debug { "WM_RECEIVE_DATA:" }
+        case wparam
+        when 1
+          ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Data" }
+          recv = RECV_PACKET.of(lparam)
+          ::XingAPI::logger.debug { recv.to_s }
+          # require 'pry'
+          # binding.pry
+          ::XingAPI::logger.debug { "recv.szTrCode: #{recv.szTrCode}" }
+          ::XingAPI::logger.debug { "recv.nDataMode: #{recv.nDataMode}" }
+          ::XingAPI::logger.debug { "recv.nDataLength: #{recv.nDataLength}" }
+
+          unless recv.nDataLength == 0
+            result1 = recv.data(block_name: 'CSPAT00600OutBlock1').to_hash
+            ::XingAPI::logger.debug { result1.to_s }
+            # result = recv.data(block_name: 'CSPAT00600OutBlock2').to_hash
+            # ::XingAPI::logger.debug { result.to_s }
+            result2 = STRUCT_CSPAT00600OutBlock2.of(recv.lpData + STRUCT_CSPAT00600OutBlock1.size).to_hash
+            ::XingAPI::logger.debug { result2.to_s }
+            result = [result1, result2]
+          end
+        when 2
+          ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Message" }
+          msg = MSG_PACKET.of(lparam)
+          ::XingAPI::logger.info { msg.to_s }
+          XingAPI.ETK_ReleaseMessageData(lparam)
+        when 3
+          ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Error" }
+          msg = MSG_PACKET.of(lparam)
+          ::XingAPI::logger.info { msg.to_s }
+          XingAPI.ETK_ReleaseMessageData(lparam)
+          break
+        when 4
+          ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Release" }
+          ::XingAPI::logger.debug { "request_id : #{lparam}" }
+          XingAPI.ETK_ReleaseRequestData(lparam)
+          break
+        else
+          ::XingAPI::logger.error { "Unknown case! wpararm: #{wparam}" }
+        end
+      end
+
+      return result
+    end
   end
 end
