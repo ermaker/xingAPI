@@ -90,7 +90,7 @@ module XingAPI
     end
 
     def tr(tr_name)
-      result = nil
+      result = {}
 
       in_block = ::XingAPI.const_get(:"STRUCT_#{tr_name}InBlock").new
       yield in_block
@@ -105,17 +105,19 @@ module XingAPI
           ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Data" }
           recv = RECV_PACKET.of(lparam)
           ::XingAPI::logger.debug { "recv: #{recv}" }
-          result = recv.data.to_hash
+          result[:data] = recv.data.to_hash
           ::XingAPI::logger.debug { "result: #{result}" }
         when 2
           ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Message" }
           msg = MSG_PACKET.of(lparam)
-          ::XingAPI::logger.info { msg.to_s }
+          result[:message] = msg.to_s
+          ::XingAPI::logger.debug { msg.to_s }
           XingAPI.ETK_ReleaseMessageData(lparam)
         when 3
           ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Error" }
           msg = MSG_PACKET.of(lparam)
-          ::XingAPI::logger.info { msg.to_s }
+          result[:message] = msg.to_s
+          ::XingAPI::logger.debug { msg.to_s }
           XingAPI.ETK_ReleaseMessageData(lparam)
           break
         when 4
