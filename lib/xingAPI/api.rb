@@ -16,9 +16,9 @@ module XingAPI
     def connect(ip, port)
       ::XingAPI::logger.info { "ip: #{ip}" }
       result = XingAPI.ETK_Connect(hwnd, ip, port.to_i, 1024, -1, 512)
-      ::XingAPI::logger.debug { "connect: #{result}" }
-
-      unless result
+      if result
+        ::XingAPI::logger.debug { "connect: #{result}" }
+      else
         ::XingAPI::logger.error { "connect: #{result}" }
         return
       end
@@ -35,8 +35,9 @@ module XingAPI
 
     def login(id, pass, pass2)
       result = XingAPI.ETK_Login(hwnd, id, pass, pass2, 0, false)
-      ::XingAPI::logger.debug { "login: #{result}" }
-      unless result
+      if result
+        ::XingAPI::logger.debug { "login: #{result}" }
+      else
         ::XingAPI::logger.error { "login: #{result}" }
         return
       end

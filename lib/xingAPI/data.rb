@@ -35,7 +35,7 @@ Dir["#{data_dir}/*.rb"].each do |filename|
 end
 
 module XingAPI
-  class RECV_PACKET < FFI::Struct
+  class RECV_PACKET < Struct
     pack 1
     layout \
       :nRqID, :int,
@@ -76,13 +76,9 @@ module XingAPI
     def to_s
       %{[#{szTrCode}] "#{szBlockName}" (#{nDataLength})}
     end
-
-    def self.of(pointer)
-      new(FFI::Pointer.new(pointer))
-    end
   end
 
-  class MSG_PACKET < FFI::Struct
+  class MSG_PACKET < Struct
     pack 1
     layout \
       :nRqID, :int,
@@ -99,10 +95,6 @@ module XingAPI
 
     def to_s
       "[#{szMsgCode}] #{lpszMessageData}"
-    end
-
-    def self.of(pointer)
-      new(FFI::Pointer.new(pointer))
     end
   end
 end
