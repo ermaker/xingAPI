@@ -1,5 +1,38 @@
 require 'ffi'
 
+module XingAPI
+  class Struct < FFI::Struct
+    def self.of(pointer)
+      new(FFI::Pointer.new(pointer))
+    end
+
+    def members
+      super.reject do |member|
+        member.to_s.start_with?('_') || member == :eos
+      end
+    end
+
+    def try_string(value)
+      case value
+      when FFI::StructLayout::CharArray
+        value.to_ptr.read_string.force_encoding('cp949')
+      else
+        value
+      end
+    end
+
+    def to_hash
+      Hash[
+        members.map do |m|
+          v = self[m]
+          v = try_string(v)
+          [m, v]
+        end
+      ]
+    end
+  end
+end
+
 data_dir = File.expand_path('../data', __FILE__)
 Dir["#{data_dir}/*.rb"].each do |filename|
   require filename

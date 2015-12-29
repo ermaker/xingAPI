@@ -1,7 +1,7 @@
 require 'ffi'
 
 module XingAPI
-  class STRUCT_CSPAT00600InBlock1 < FFI::Struct
+  class STRUCT_CSPAT00600InBlock1 < Struct
     pack 1
     layout \
           :AcntNo, [:char, 20],
@@ -15,37 +15,8 @@ module XingAPI
           :LoanDt, [:char, 8],
           :OrdCndiTpCode, [:char, 1],
           :eos, [:char, 0]
-
-    def self.of(pointer)
-      new(FFI::Pointer.new(pointer))
-    end
-
-    def members
-      super.reject do |member|
-        member.to_s.start_with?('_') || member == :eos
-      end
-    end
-
-    def try_string(value)
-      case value
-      when FFI::StructLayout::CharArray
-        value.to_ptr.read_string.force_encoding('cp949')
-      else
-        value
-      end
-    end
-
-    def to_hash
-      Hash[
-        members.map do |m|
-          v = self[m]
-          v = try_string(v)
-          [m, v]
-        end
-      ]
-    end
   end
-  class STRUCT_CSPAT00600OutBlock1 < FFI::Struct
+  class STRUCT_CSPAT00600OutBlock1 < Struct
     pack 1
     layout \
           :RecCnt, [:char, 5],
@@ -75,37 +46,8 @@ module XingAPI
           :LpYn, [:char, 1],
           :CvrgTpCode, [:char, 1],
           :eos, [:char, 0]
-
-    def self.of(pointer)
-      new(FFI::Pointer.new(pointer))
-    end
-
-    def members
-      super.reject do |member|
-        member.to_s.start_with?('_') || member == :eos
-      end
-    end
-
-    def try_string(value)
-      case value
-      when FFI::StructLayout::CharArray
-        value.to_ptr.read_string.force_encoding('cp949')
-      else
-        value
-      end
-    end
-
-    def to_hash
-      Hash[
-        members.map do |m|
-          v = self[m]
-          v = try_string(v)
-          [m, v]
-        end
-      ]
-    end
   end
-  class STRUCT_CSPAT00600OutBlock2 < FFI::Struct
+  class STRUCT_CSPAT00600OutBlock2 < Struct
     pack 1
     layout \
           :RecCnt, [:char, 5],
@@ -127,34 +69,5 @@ module XingAPI
           :AcntNm, [:char, 40],
           :IsuNm, [:char, 40],
           :eos, [:char, 0]
-
-    def self.of(pointer)
-      new(FFI::Pointer.new(pointer))
-    end
-
-    def members
-      super.reject do |member|
-        member.to_s.start_with?('_') || member == :eos
-      end
-    end
-
-    def try_string(value)
-      case value
-      when FFI::StructLayout::CharArray
-        value.to_ptr.read_string.force_encoding('cp949')
-      else
-        value
-      end
-    end
-
-    def to_hash
-      Hash[
-        members.map do |m|
-          v = self[m]
-          v = try_string(v)
-          [m, v]
-        end
-      ]
-    end
   end
 end
