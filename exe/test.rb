@@ -2,9 +2,7 @@ require 'dotenv'
 Dotenv.load
 
 require 'xingAPI'
-require 'xingAPI/xingAPI'
 require 'xingAPI/api'
-require 'xingAPI/data'
 
 XingAPI::API.new(ENV['IP'], ENV['PORT'], ENV['ID'], ENV['PASS'], ENV['PASS2']) do |api|
   if true

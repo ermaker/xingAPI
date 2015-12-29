@@ -1,5 +1,6 @@
 require 'xingAPI/xingAPI'
 require 'xingAPI/fibered_windows'
+require 'xingAPI/data'
 require 'ffi'
 
 module XingAPI
