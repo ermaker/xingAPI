@@ -7,7 +7,7 @@ require 'xingAPI/api'
 require 'xingAPI/data'
 
 XingAPI::API.new(ENV['IP'], ENV['PORT'], ENV['ID'], ENV['PASS'], ENV['PASS2']) do |api|
-  if true
+  if false
     count = XingAPI::XingAPI.ETK_GetAccountListCount()
     ::XingAPI::logger.info { "AccountListCount: #{count}" }
     p ['account list count', count]
@@ -23,7 +23,7 @@ XingAPI::API.new(ENV['IP'], ENV['PORT'], ENV['ID'], ENV['PASS'], ENV['PASS2']) d
     api.tr_CSPAT00600(ENV['ACCOUNT'], ENV['ACCOUNT_PASS'], '114800', 1, :sell)
   end
 
-  if true
+  if false
     3.times do
       data = api.tr_t1901('122630')
       ::XingAPI::logger.info { "#{data[:hname].strip}: #{data[:price]} (#{data[:diff]}%)" }

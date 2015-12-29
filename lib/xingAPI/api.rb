@@ -100,17 +100,17 @@ module XingAPI
 
       price = 0
 
-      order = STRUCT_CSPAT00600InBlock1.new
-      order[:AcntNo].to_ptr.write_string(account.ljust(20))
-      order[:InptPwd].to_ptr.write_string(account_pass.ljust(8))
-      order[:IsuNo].to_ptr.write_string("A#{shcode}".ljust(12))
-      order[:OrdQty].to_ptr.write_string(format('%016d', qty))
-      order[:OrdPrc].to_ptr.write_string(format('%013.2f', price))
-      order[:BnsTpCode].to_ptr.write_string(SELL_OR_BUY.fetch(sell_or_buy))
-      order[:OrdprcPtnCode].to_ptr.write_string('03')
-      order[:MgntrnCode].to_ptr.write_string('000')
-      order[:LoanDt].to_ptr.write_string('00000000')
-      order[:OrdCndiTpCode].to_ptr.write_string('0')
+      order = STRUCT_CSPAT00600InBlock.new
+      order[:STRUCT_CSPAT00600InBlock1][:AcntNo].to_ptr.write_string(account.ljust(20))
+      order[:STRUCT_CSPAT00600InBlock1][:InptPwd].to_ptr.write_string(account_pass.ljust(8))
+      order[:STRUCT_CSPAT00600InBlock1][:IsuNo].to_ptr.write_string("A#{shcode}".ljust(12))
+      order[:STRUCT_CSPAT00600InBlock1][:OrdQty].to_ptr.write_string(format('%016d', qty))
+      order[:STRUCT_CSPAT00600InBlock1][:OrdPrc].to_ptr.write_string(format('%013.2f', price))
+      order[:STRUCT_CSPAT00600InBlock1][:BnsTpCode].to_ptr.write_string(SELL_OR_BUY.fetch(sell_or_buy))
+      order[:STRUCT_CSPAT00600InBlock1][:OrdprcPtnCode].to_ptr.write_string('03')
+      order[:STRUCT_CSPAT00600InBlock1][:MgntrnCode].to_ptr.write_string('000')
+      order[:STRUCT_CSPAT00600InBlock1][:LoanDt].to_ptr.write_string('00000000')
+      order[:STRUCT_CSPAT00600InBlock1][:OrdCndiTpCode].to_ptr.write_string('0')
 
       request_id = XingAPI.ETK_Request(hwnd, 'CSPAT00600', order, order.size, false, nil, 1)
       ::XingAPI::logger.debug { "request_id: #{request_id}" }
@@ -123,21 +123,11 @@ module XingAPI
           ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Data" }
           recv = RECV_PACKET.of(lparam)
           ::XingAPI::logger.debug { recv.to_s }
-          # require 'pry'
-          # binding.pry
           ::XingAPI::logger.debug { "recv.szTrCode: #{recv.szTrCode}" }
           ::XingAPI::logger.debug { "recv.nDataMode: #{recv.nDataMode}" }
           ::XingAPI::logger.debug { "recv.nDataLength: #{recv.nDataLength}" }
-
-          unless recv.nDataLength == 0
-            result1 = recv.data(block_name: 'CSPAT00600OutBlock1').to_hash
-            ::XingAPI::logger.debug { result1.to_s }
-            # result = recv.data(block_name: 'CSPAT00600OutBlock2').to_hash
-            # ::XingAPI::logger.debug { result.to_s }
-            result2 = STRUCT_CSPAT00600OutBlock2.of(recv.lpData + STRUCT_CSPAT00600OutBlock1.size).to_hash
-            ::XingAPI::logger.debug { result2.to_s }
-            result = [result1, result2]
-          end
+          result = recv.data.to_hash
+          ::XingAPI::logger.debug { "result: #{result.to_s}" }
         when 2
           ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Message" }
           msg = MSG_PACKET.of(lparam)

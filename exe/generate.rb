@@ -18,9 +18,20 @@ module XingAPI
   class STRUCT<%= name %> < Struct
     pack 1
     layout \\
-    <% struct.map do |name, size| %>
+<% struct.map do |name, size| %>
       :<%= name %>, [:char, <%= size || 1 %>],
-    <% end %>
+<% end %>
+      :eos, [:char, 0]
+  end
+<% end %>
+
+<% struct_list.group_by { |name, _| name[/^(_.*Block)\\d+$/, 1] }.reject { |k, _| k.nil? }.each do |base, structs| %>
+  class STRUCT<%= base %> < Struct
+    pack 1
+    layout \\
+<% structs.each do |name, struct| %>
+      :STRUCT<%= name %>, STRUCT<%= name %>,
+<% end %>
       :eos, [:char, 0]
   end
 <% end %>

@@ -12,23 +12,19 @@ module XingAPI
       end
     end
 
-    def try_string(value)
+    def try_convert(value)
       case value
       when FFI::StructLayout::CharArray
         value.to_ptr.read_string.force_encoding('cp949')
+      when Struct
+        value.to_hash
       else
         value
       end
     end
 
     def to_hash
-      Hash[
-        members.map do |m|
-          v = self[m]
-          v = try_string(v)
-          [m, v]
-        end
-      ]
+      Hash[members.map { |m| [m, try_convert(self[m])] }]
     end
   end
 end
@@ -66,8 +62,8 @@ module XingAPI
     def szBlockName; self[:szBlockName].to_ptr.read_string; end
     def lpData; self[:lpData]; end
 
-    def data(block_name: szBlockName)
-      ::XingAPI.const_get("STRUCT_#{block_name}").of(lpData)
+    def data
+      ::XingAPI.const_get("STRUCT_#{szTrCode}OutBlock").of(lpData)
     end
 
     def to_s
