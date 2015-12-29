@@ -21,10 +21,10 @@ module XingAPI
     attach_function :ETK_GetAccountList, [:int, :pointer, :int], :bool
     
     def account(idx)
-      unless idx < ETK_GetAccountListCount
+      unless idx < self.ETK_GetAccountListCount
         ::XingAPI::logger.warn do
           "Should be idx(#{idx}) < " \
-          "ETK_GetAccountListCount(#{ETK_GetAccountListCount})"
+          "self.ETK_GetAccountListCount(#{self.ETK_GetAccountListCount})"
         end
         return
       end

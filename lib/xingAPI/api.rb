@@ -71,7 +71,10 @@ module XingAPI
         tr_name = 'CSPAT00600'
         price = 0
 
-        account ||= XingAPI.account(0)
+        unless account
+          account = XingAPI.account(0)
+          ::XingAPI::logger.info { "account: #{account}" }
+        end
 
         in_block[:"STRUCT_#{tr_name}InBlock1"][:AcntNo].to_ptr.write_string(account.ljust(20))
         in_block[:"STRUCT_#{tr_name}InBlock1"][:InptPwd].to_ptr.write_string(account_pass.ljust(8))
@@ -97,7 +100,6 @@ module XingAPI
 
       loop do
         _, _, wparam, lparam = @win.resume { |_, msgid, _, _| msgid == 1024 + 3}
-        ::XingAPI::logger.debug { "WM_RECEIVE_DATA:" }
         case wparam
         when 1
           ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Data" }
@@ -121,7 +123,7 @@ module XingAPI
           XingAPI.ETK_ReleaseRequestData(lparam)
           break
         else
-          ::XingAPI::logger.error { "Unknown case! wpararm: #{wparam}" }
+          ::XingAPI::logger.warn { "WM_RECEIVE_DATA: Unknown case! (#{wparam})" }
         end
       end
 
