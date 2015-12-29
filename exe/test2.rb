@@ -25,18 +25,21 @@ XingAPI::API.new(ENV['IP'], ENV['PORT'], ENV['ID'], ENV['PASS'], ENV['PASS2']) d
 
     account = ENV['ACCOUNT']
     account_pass = ENV['ACCOUNT_PASS']
-    shcode = '122630'
-    qty = 10
+    shcode = '114800'
+    qty = 1
     price = 0
-    sell_or_buy = '2'
+    sell_or_buy = :sell
+    # sell_or_buy = :buy
+
+    _SELL_OR_BUY = {sell: '1', buy: '2'}
 
     order = XingAPI::STRUCT_CSPAT00600InBlock1.new
     order[:AcntNo].to_ptr.write_string(account.ljust(20))
     order[:InptPwd].to_ptr.write_string(account_pass.ljust(8))
     order[:IsuNo].to_ptr.write_string("A#{shcode}".ljust(12))
     order[:OrdQty].to_ptr.write_string(format('%016d', qty))
-    order[:OrdPrc].to_ptr.write_string(format('%011.2f', price))
-    order[:BnsTpCode].to_ptr.write_string(sell_or_buy)
+    order[:OrdPrc].to_ptr.write_string(format('%013.2f', price))
+    order[:BnsTpCode].to_ptr.write_string(_SELL_OR_BUY.fetch(sell_or_buy))
     order[:OrdprcPtnCode].to_ptr.write_string('03')
     order[:MgntrnCode].to_ptr.write_string('000')
     order[:LoanDt].to_ptr.write_string('00000000')
@@ -55,31 +58,32 @@ XingAPI::API.new(ENV['IP'], ENV['PORT'], ENV['ID'], ENV['PASS'], ENV['PASS2']) d
         ::XingAPI::logger.debug { recv.to_s }
         # require 'pry'
         # binding.pry
-        ::XingAPI::logger.debug { recv.szTrCode }
-        ::XingAPI::logger.debug { recv.nDataMode }
-        ::XingAPI::logger.debug { recv.nDataLength }
+        ::XingAPI::logger.debug { "recv.szTrCode: #{recv.szTrCode}" }
+        ::XingAPI::logger.debug { "recv.nDataMode: #{recv.nDataMode}" }
+        ::XingAPI::logger.debug { "recv.nDataLength: #{recv.nDataLength}" }
 
-        result = recv.data(block_name: 'CSPAT00600OutBlock1').to_hash
-        ::XingAPI::logger.debug { result.to_s }
-        # result = recv.data(block_name: 'CSPAT00600OutBlock2').to_hash
-        # ::XingAPI::logger.debug { result.to_s }
-        result = ::XingAPI::STRUCT_CSPAT00600OutBlock2.of(recv.lpData + ::XingAPI::STRUCT_CSPAT00600OutBlock1.size).to_hash
-        ::XingAPI::logger.debug { result.to_s }
+        unless recv.nDataLength == 0
+          result = recv.data(block_name: 'CSPAT00600OutBlock1').to_hash
+          ::XingAPI::logger.debug { result.to_s }
+          # result = recv.data(block_name: 'CSPAT00600OutBlock2').to_hash
+          # ::XingAPI::logger.debug { result.to_s }
+          result = ::XingAPI::STRUCT_CSPAT00600OutBlock2.of(recv.lpData + ::XingAPI::STRUCT_CSPAT00600OutBlock1.size).to_hash
+          ::XingAPI::logger.debug { result.to_s }
+        end
       when 2
         ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Message" }
         msg = XingAPI::MSG_PACKET.of(lparam)
-        ::XingAPI::logger.debug { msg.to_s }
-
+        ::XingAPI::logger.info { msg.to_s }
         XingAPI::XingAPI.ETK_ReleaseMessageData(lparam)
       when 3
         ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Error" }
         msg = XingAPI::MSG_PACKET.of(lparam)
-        ::XingAPI::logger.debug { msg.to_s }
-
+        ::XingAPI::logger.info { msg.to_s }
         XingAPI::XingAPI.ETK_ReleaseMessageData(lparam)
         break
       when 4
         ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Release" }
+        ::XingAPI::logger.debug { "request_id : #{lparam}" }
         XingAPI::XingAPI.ETK_ReleaseRequestData(lparam)
         break
       else

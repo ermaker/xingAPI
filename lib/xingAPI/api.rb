@@ -14,6 +14,7 @@ module XingAPI
     end
 
     def connect(ip, port)
+      ::XingAPI::logger.info { "ip: #{ip}" }
       result = XingAPI.ETK_Connect(hwnd, ip, port.to_i, 1024, -1, 512)
       ::XingAPI::logger.debug { "connect: #{result}" }
 
