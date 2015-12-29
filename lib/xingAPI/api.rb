@@ -70,6 +70,9 @@ module XingAPI
       tr('CSPAT00600') do |in_block|
         tr_name = 'CSPAT00600'
         price = 0
+
+        account ||= XingAPI.account(0)
+
         in_block[:"STRUCT_#{tr_name}InBlock1"][:AcntNo].to_ptr.write_string(account.ljust(20))
         in_block[:"STRUCT_#{tr_name}InBlock1"][:InptPwd].to_ptr.write_string(account_pass.ljust(8))
         in_block[:"STRUCT_#{tr_name}InBlock1"][:IsuNo].to_ptr.write_string("A#{shcode}".ljust(12))

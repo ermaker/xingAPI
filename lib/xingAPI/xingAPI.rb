@@ -19,6 +19,20 @@ module XingAPI
 
     attach_function :ETK_GetAccountListCount, [], :int
     attach_function :ETK_GetAccountList, [:int, :pointer, :int], :bool
+    
+    def account(idx)
+      unless idx < ETK_GetAccountListCount
+        ::XingAPI::logger.warn do
+          "Should be idx(#{idx}) < " \
+          "ETK_GetAccountListCount(#{ETK_GetAccountListCount})"
+        end
+        return
+      end
+      out = FFI::MemoryPointer.new(256)
+      ETK_GetAccountList(idx, out, out.size)
+      out.read_string
+    end
+    module_function :account
 
     attach_function :ETK_GetClientIP, [:pointer], :void
     attach_function :ETK_GetServerName, [:pointer], :void
