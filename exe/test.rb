@@ -16,7 +16,7 @@ XingAPI::API.new(ENV['IP'], ENV['PORT'], ENV['ID'], ENV['PASS'], ENV['PASS2']) d
     ::XingAPI::logger.info { result[:message] }
   end
 
-  if false
+  if true
     3.times do
       result = api.tr_t1901('122630')
       ::XingAPI::logger.info do
