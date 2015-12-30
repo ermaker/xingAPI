@@ -13,7 +13,7 @@ module XingAPI
       ffi_convention(:stdcall)
       private
       def self._func(*args)
-        attach_function *args
+        attach_function(*args)
         case args.size
           when 3
             module_function args[0]

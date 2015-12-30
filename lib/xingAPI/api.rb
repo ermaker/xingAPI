@@ -58,7 +58,7 @@ module XingAPI
       end
 
       _, _, wparam, lparam = @win.resume_login
-      param = [wparam, lparam].map { |param| pointer_to_string(param) }
+      param = [wparam, lparam].map { |p| pointer_to_string(p) }
       message = "[#{param[0]}] #{param[1]}"
       ::XingAPI::logger.debug { "login: #{message}" }
 
