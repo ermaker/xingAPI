@@ -11,7 +11,15 @@ module XingAPI
 
     def initialize(ip, port, id, pass, pass2)
       @win = FiberedWindows.new
-      connect(ip, port) { login(id, pass, pass2) { yield self } }
+      if block_given?
+        connect(ip, port) do
+          login(id, pass, pass2) do
+            yield self
+          end
+        end
+      else
+        connect_(ip, port) && login_(id, pass, pass2)
+      end
     end
 
     def connect_(ip, port)
