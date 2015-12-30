@@ -14,49 +14,61 @@ module XingAPI
       connect(ip, port) { login(id, pass, pass2) { yield self } }
     end
 
-    def connect(ip, port)
+    def connect_(ip, port)
       ::XingAPI::logger.info { "ip: #{ip}" }
       result = XingAPI.ETK_Connect(hwnd, ip, port.to_i, 1024, -1, 512)
       if result
         ::XingAPI::logger.debug { "connect: #{result}" }
       else
         ::XingAPI::logger.error { "connect: #{result}" }
-        return
       end
+      result
+    end
 
-      yield
-    ensure
+    def disconnect_
       XingAPI.ETK_Disconnect
       ::XingAPI::logger.debug { 'disconnect' }
+    end
+
+    def connect(ip, port)
+      yield if connect_(ip, port)
+    ensure
+      disconnect_
     end
 
     def pointer_to_string(pointer)
       FFI::Pointer.new(pointer).read_string.force_encoding('cp949')
     end
 
-    def login(id, pass, pass2)
+    def login_(id, pass, pass2)
       result = XingAPI.ETK_Login(hwnd, id, pass, pass2, 0, false)
       if result
         ::XingAPI::logger.debug { "login: #{result}" }
       else
         ::XingAPI::logger.error { "login: #{result}" }
-        return
+        return false
       end
 
       _, _, wparam, lparam = @win.resume_login
-      result = [wparam, lparam].map { |param| pointer_to_string(param) }
-      message = "[#{result[0]}] #{result[1]}"
+      param = [wparam, lparam].map { |param| pointer_to_string(param) }
+      message = "[#{param[0]}] #{param[1]}"
       ::XingAPI::logger.debug { "login: #{message}" }
 
       unless pointer_to_string(wparam) == '0000'
         ::XingAPI::logger.error { "login: #{message}" }
-        return
       end
+      return result
+    end
 
-      yield
-    ensure
+    def logout_
       XingAPI.ETK_Logout(hwnd)
       ::XingAPI::logger.debug { "logout: #{hwnd}" }
+    end
+
+    def login(id, pass, pass2)
+      yield if login_(id, pass, pass2)
+    ensure
+      logout_
     end
 
     def tr_t1901(shcode)
