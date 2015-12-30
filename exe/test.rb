@@ -5,7 +5,7 @@ require 'xingAPI'
 require 'xingAPI/api'
 
 XingAPI::API.new(ENV['IP'], ENV['PORT'], ENV['ID'], ENV['PASS'], ENV['PASS2']) do |api|
-  if true
+  if false
     result = api.tr_CSPAT00600(ENV['ACCOUNT'], ENV['ACCOUNT_PASS'], '114800', 1, :sell)
     ::XingAPI::logger.info { result[:message] }
   end
