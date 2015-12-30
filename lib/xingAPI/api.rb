@@ -152,5 +152,9 @@ module XingAPI
 
       return result
     end
+
+    def account(idx)
+      XingAPI.account(idx)
+    end
   end
 end
