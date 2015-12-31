@@ -1,4 +1,4 @@
-ext_path = File.expand_path('../../ext', __FILE__)
+ext_path = File.expand_path('../../ext/xingAPI', __FILE__)
 ENV['PATH'] = "#{ext_path};#{ENV['PATH']}"
 
 require "xingAPI/version"
