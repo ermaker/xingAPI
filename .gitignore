@@ -8,4 +8,4 @@
 /spec/reports/
 /tmp/
 .env
-ext/Login.ini
+ext/xingAPI/Login.ini
