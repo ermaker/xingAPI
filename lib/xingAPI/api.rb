@@ -80,6 +80,8 @@ module XingAPI
     end
 
     def tr_t1901(shcode)
+      shcode = shcode.to_s
+
       tr('t1901') do |in_block|
         in_block[:shcode].to_ptr.write_string(shcode)
       end
@@ -88,11 +90,17 @@ module XingAPI
     SELL_OR_BUY = {sell: '1', buy: '2'}
 
     def tr_CSPAT00600(account, account_pass, shcode, qty, sell_or_buy)
+      account = account.to_s
+      account_pass = account_pass.to_s
+      shcode = shcode.to_s
+      qty = qty.to_i
+      sell_or_buy = sell_or_buy.to_sym
+
       tr('CSPAT00600') do |in_block|
         tr_name = 'CSPAT00600'
         price = 0
 
-        unless account
+        if account.empty?
           account = XingAPI.account(0)
           ::XingAPI::logger.info { "account: #{account}" }
         end
