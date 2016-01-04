@@ -3,8 +3,7 @@ require 'multi_json'
 
 module XingAPI
   class Connector
-    RUN_COMMAND = %w[bundle exec ruby -Ilib exe\\run.rb]
-    # RUN_COMMAND = %w[bundle exec run]
+    RUN_COMMAND = %w[bundle exec run]
     def initialize
       @stdin, @stdout, @wait_thr = Open3.popen2(*RUN_COMMAND)
     end

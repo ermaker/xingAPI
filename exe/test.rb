@@ -6,6 +6,9 @@ require 'xingAPI/connector'
 
 module XingAPI
   @logger = Logger.new(STDOUT)
+  class Connector
+    RUN_COMMAND = %w[bundle exec ruby -Ilib exe\\run.rb]
+  end
 end
 
 api = XingAPI::Connector.new
