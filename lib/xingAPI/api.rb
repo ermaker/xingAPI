@@ -1,5 +1,6 @@
 require 'xingAPI/xingAPI'
 require 'xingAPI/fibered_windows'
+# require 'xingAPI/threaded_windows'
 require 'xingAPI/data'
 require 'ffi'
 
@@ -11,6 +12,7 @@ module XingAPI
 
     def initialize(ip, port, id, pass, pass2)
       @win = FiberedWindows.new
+      # @win = ThreadedWindows.new
       if block_given?
         connect(ip, port) do
           login(id, pass, pass2) do

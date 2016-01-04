@@ -56,6 +56,19 @@ module XingAPI
       end
     end
 
+    def pump
+      loop do
+        ::XingAPI::logger.debug { "Pump loop" }
+        msg = Win32::MSG.new
+        while Win32::PeekMessage(msg, Win32::NULL, 0, 0, Win32::PM_REMOVE) > 0
+          ::XingAPI::logger.debug { "PeekMessage" }
+          Win32::TranslateMessage(msg)
+          Win32::DispatchMessage(msg)
+        end
+        sleep 0.01
+      end
+    end
+
     def pump_up(time: 1)
       @finish = false
       step = 0.01
