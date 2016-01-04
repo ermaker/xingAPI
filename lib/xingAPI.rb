@@ -6,7 +6,7 @@ require 'logger'
 
 module XingAPI
   def logger
-    @logger = Logger.new(STDOUT).tap do |logger|
+    @logger = Logger.new(STDERR).tap do |logger|
       logger.level = Logger.const_get(
         (ENV['LOG'] || 'debug').upcase
       )

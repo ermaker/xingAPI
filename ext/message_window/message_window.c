@@ -2,9 +2,9 @@
 #include <windows.h>
 #include <stdio.h>
 
-
 static VALUE MessageWindow;
 static VALUE queue;
+static VALUE hwnd;
 
 LRESULT CALLBACK message_to_queue(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -12,9 +12,10 @@ LRESULT CALLBACK message_to_queue(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
   // rb_eval_string("$_message_window_queue.push 'test'");
   // rb_funcall(queue, rb_intern("push"), 4,
   //   INT2NUM((int)hwnd), INT2NUM(uMsg), INT2NUM(wParam), INT2NUM(lParam));
-  rb_funcall(queue, rb_intern("push"), 1,
-    INT2NUM(uMsg));
-  // printf("%x %x %x %x\n", (unsigned int)hwnd, uMsg, wParam, (unsigned int)lParam);
+  
+  // rb_funcall(queue, rb_intern("push"), 1,
+  //   INT2NUM(uMsg));
+  printf("WM  : %x %x %x %x\n", (unsigned int)hwnd, uMsg, wParam, (unsigned int)lParam);
   return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
@@ -95,14 +96,66 @@ HWND xmake_window()
 
 DWORD WINAPI pump(LPVOID lpParam)
 {
+  /*
+  rb_eval_string("puts 'pump WORKS!!'");
+  rb_eval_string("puts 'pump WORKS!!'");
+  rb_eval_string("puts 'pump WORKS!!'");
+  rb_eval_string("puts 'pump WORKS!!'");
+  rb_eval_string("puts 'pump WORKS!!'");
+
+  return 0;
+  */
+
   MSG msg = { };
+  printf("pump STARTED\n");
+  while (GetMessage(&msg, NULL, 0, 0))
+  // while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+  // while (WaitMessage())
+  {
+    // GetMessage(&msg, NULL, 0, 0);
+    printf("PUMP: %x %x %x %x\n", (unsigned int)msg.hwnd, msg.message, msg.wParam, (unsigned int)msg.lParam);
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+    sleep(1);
+  }
+  printf("pump FINISHED\n");
+  // rb_eval_string("puts 'pump FINISHED'");
+  return 0;
+}
+
+void test_pump()
+{
+  MSG msg = { };
+  printf("PUMP started\n");
   while (GetMessage(&msg, NULL, 0, 0))
   {
+    printf("PUMP: %x %x %x %x\n", (unsigned int)msg.hwnd, msg.message, msg.wParam, (unsigned int)msg.lParam);
     TranslateMessage(&msg);
     DispatchMessage(&msg);
   }
-  rb_eval_string("puts 'pump FINISHED'");
+  printf("PUMP finished\n");
   return 0;
+}
+
+DWORD WINAPI test_thread(LPVOID lpParam)
+{
+  HWND hwnd_ = make_window();
+  printf("hwnd: %x\n", hwnd_);
+  hwnd = INT2NUM(hwnd_);
+  test_pump();
+  return 0;
+}
+
+VALUE test_(VALUE self)
+{
+  HANDLE handle = CreateThread( 
+    NULL,
+    0,
+    test_thread,
+    NULL,
+    0,
+    NULL);
+  return INT2NUM((int)handle);
 }
 
 VALUE create_(VALUE self)
@@ -113,6 +166,7 @@ VALUE create_(VALUE self)
 
 VALUE pump_(VALUE self)
 {
+  return rb_thread_call_without_gvl2(pump, 0);
   HANDLE handle = CreateThread( 
     NULL,
     0,
@@ -142,9 +196,11 @@ void Init_message_window()
   // rb_cv_set(MessageWindow, "@@queue", queue);
   // rb_define_const(MessageWindow, "QUEUE", queue);
   rb_define_variable("$_message_window_queue", &queue);
+  rb_define_variable("$_message_window_hwnd", &hwnd);
 
   MessageWindow = rb_define_class("MessageWindow" , rb_cObject);
   rb_define_method(MessageWindow, "create", create_, 0);
   rb_define_method(MessageWindow, "pump", pump_, 0);
+  rb_define_method(MessageWindow, "test_", test_, 0);
   rb_define_method(MessageWindow, "queue", queue_, 0);
 }
