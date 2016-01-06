@@ -12,7 +12,17 @@ module XingAPI
 end
 
 api = XingAPI::Connector.new
-if true
+STDOUT.sync = true
+loop do
+  # ::XingAPI::logger.info { "account: #{api.account(0)}" }
+  result = api.tr_t1901('122630')
+  ::XingAPI::logger.info do
+    "#{result['data']['hname'].strip}: #{result['data']['price']} (#{result['data']['diff']}%)"
+  end
+  ::XingAPI::logger.info { result['message'] }
+  sleep 10
+end
+if false
   ::XingAPI::logger.info { "account: #{api.account(0)}" }
 end
 if false

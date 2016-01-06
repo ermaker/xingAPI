@@ -1,11 +1,22 @@
-require 'open3'
 require 'multi_json'
+require 'open3'
+require 'timeout'
 
 module XingAPI
   class Connector
-    RUN_COMMAND = %w[bundle exec run.rb]
     def initialize
-      @stdin, @stdout, @wait_thr = Open3.popen2(*RUN_COMMAND)
+      open
+    end
+
+    RUN_COMMAND = %w[bundle exec run.rb]
+
+    def open
+      @stdin, @stdout, @wait = Open3.popen2(*RUN_COMMAND)
+    end
+
+    def reopen
+      finish_
+      open
     end
 
     def run_(*args)
@@ -14,18 +25,28 @@ module XingAPI
 
     def run(*args)
       run_(*args)
-      MultiJson.load(@stdout.gets)
+      retval = Timeout.timeout(10) { @stdout.gets }
+      MultiJson.load(retval)
+    rescue Timeout::Error
+      ::XingAPI::logger.warn { "Timeout: #{args}" }
+      reopen
+      retry
     end
 
     def method_missing(*args)
       run(*args)
     end
 
+    def finish_
+      @stdin.close
+      @stdout.close
+      @wait.terminate
+    end
+
     def finish
       run_(:exit)
     ensure
-      @stdin.close
-      @stdout.close
+      finish_
     end
   end
 end
