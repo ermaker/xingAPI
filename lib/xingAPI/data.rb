@@ -62,6 +62,12 @@ module XingAPI
     def szBlockName; self[:szBlockName].to_ptr.read_string; end
     def lpData; self[:lpData]; end
 
+    class NilData
+      def to_hash
+        nil
+      end
+    end
+
     def data
       klass = ::XingAPI.const_get("STRUCT_#{szTrCode}OutBlock")
       if nDataLength != klass.size
@@ -70,7 +76,12 @@ module XingAPI
           "nDataLength(#{nDataLength}) != klass.size(#{klass.size})"
         end
       end
-      klass.of(lpData)
+      if nDataLength == 0
+        ::XingAPI::logger.warn { 'Size is 0'}
+        NilData.new
+      else
+        klass.of(lpData)
+      end
     end
 
     def to_s
