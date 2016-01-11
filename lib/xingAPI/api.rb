@@ -80,59 +80,47 @@ module XingAPI
     end
 
     def tr_t1901(shcode)
-      shcode = shcode.to_s
-
-      tr('t1901') do |in_block|
-        in_block[:shcode].to_ptr.write_string(shcode)
-      end
+      tr('t1901', shcode: shcode)
     end
 
     def tr_t1903(shcode, date = '')
-      shcode = shcode.to_s
-      date = date.to_s
-
-      tr('t1903', !date.empty?) do |in_block|
-        in_block[:shcode].to_ptr.write_string(shcode)
-        in_block[:date].to_ptr.write_string(date.ljust(8))
-      end
+      tr(
+        't1903', !date.empty?,
+        shcode: shcode, date: date)
     end
 
     SELL_OR_BUY = {sell: '1', buy: '2'}
 
     def tr_CSPAT00600(account, account_pass, shcode, qty, sell_or_buy)
-      account = account.to_s
-      account_pass = account_pass.to_s
-      shcode = shcode.to_s
-      qty = qty.to_i
-      sell_or_buy = sell_or_buy.to_sym
-
-      tr('CSPAT00600') do |in_block|
-        tr_name = 'CSPAT00600'
-        price = 0
-
-        if account.empty?
-          account = XingAPI.account(0)
-          ::XingAPI::logger.info { "account: #{account}" }
-        end
-
-        in_block[:"STRUCT_#{tr_name}InBlock1"][:AcntNo].to_ptr.write_string(account.ljust(20))
-        in_block[:"STRUCT_#{tr_name}InBlock1"][:InptPwd].to_ptr.write_string(account_pass.ljust(8))
-        in_block[:"STRUCT_#{tr_name}InBlock1"][:IsuNo].to_ptr.write_string("A#{shcode}".ljust(12))
-        in_block[:"STRUCT_#{tr_name}InBlock1"][:OrdQty].to_ptr.write_string(format('%016d', qty))
-        in_block[:"STRUCT_#{tr_name}InBlock1"][:OrdPrc].to_ptr.write_string(format('%013.2f', price))
-        in_block[:"STRUCT_#{tr_name}InBlock1"][:BnsTpCode].to_ptr.write_string(SELL_OR_BUY.fetch(sell_or_buy))
-        in_block[:"STRUCT_#{tr_name}InBlock1"][:OrdprcPtnCode].to_ptr.write_string('03')
-        in_block[:"STRUCT_#{tr_name}InBlock1"][:MgntrnCode].to_ptr.write_string('000')
-        in_block[:"STRUCT_#{tr_name}InBlock1"][:LoanDt].to_ptr.write_string('00000000')
-        in_block[:"STRUCT_#{tr_name}InBlock1"][:OrdCndiTpCode].to_ptr.write_string('0')
+      if account.nil? || account.empty?
+        account = XingAPI.account(0)
+        ::XingAPI::logger.info { "account: #{account}" }
       end
+      sell_or_buy = sell_or_buy.to_sym
+      price = 0
+
+      tr(
+        'CSPAT00600', 
+        'STRUCT_CSPAT00600InBlock1': {
+          AcntNo: account,
+          InptPwd: account_pass,
+          IsuNo: "A#{shcode}",
+          OrdQty: qty,
+          OrdPrc: price,
+          BnsTpCode: SELL_OR_BUY.fetch(sell_or_buy),
+          OrdprcPtnCode: '03',
+          MgntrnCode: '000',
+          LoanDt: '00000000',
+          OrdCndiTpCode: '0'
+        }
+      )
     end
 
-    def tr(tr_name, is_continue=false)
+    def tr(tr_name, is_continue=false, **input)
       result = {}
 
       in_block = ::XingAPI.const_get(:"STRUCT_#{tr_name}InBlock").new
-      yield in_block
+      in_block.assign(input)
 
       request_id = XingAPI.ETK_Request(hwnd, tr_name, in_block, in_block.size, is_continue, nil, 1)
       ::XingAPI::logger.debug { "request_id: #{request_id}" }

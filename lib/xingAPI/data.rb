@@ -17,6 +17,30 @@ module XingAPI
       end)
     end
 
+    def assign_(key, value)
+      case type[key][:type]
+      when :string
+        value = value.to_s.ljust(type[key][:size].to_i)
+        self[key].to_ptr.write_string(value)
+      when :long
+        value = format("%0#{type[key][:size]}d", value.to_i)
+        self[key].to_ptr.write_string(value)
+      when :double
+        value = format("%0#{type[key][:size]}f", value.to_f)
+        self[key].to_ptr.write_string(value)
+      when :struct
+        self[key].assign(value)
+      else
+        ::XingAPI::logger.warn do
+          "Unexpected type: #{type[key][:type]} (#{key})"
+        end
+      end
+    end
+
+    def assign(**value)
+      value.each { |key, value| assign_(key, value) }
+    end
+
     def members
       super.reject do |member|
         member.to_s.start_with?('_') || member == :eos

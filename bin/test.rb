@@ -18,6 +18,8 @@ if false
   ::XingAPI::logger.info do
     result
   end
+end
+if false
   sleep 2
   result = api.tr_t1903('122630', '20150101')
   ::XingAPI::logger.info do
