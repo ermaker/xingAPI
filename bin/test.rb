@@ -28,18 +28,18 @@ if false
 end
 if false
   result = api.tr_t1901('122630')
-  data = result['data'].last
+  response = result['response'].last
   ::XingAPI::logger.info do
-    "#{data['hname'].strip}: #{data['price']} (#{data['diff']}%)"
+    "#{response['hname'].strip}: #{response['price']} (#{response['diff']}%)"
   end
 end
 if false
   loop do
     # ::XingAPI::logger.info { "account: #{api.account(0)}" }
     result = api.tr_t1901('122630')
-    data = result['data'].last
+    response = result['response'].last
     ::XingAPI::logger.info do
-      "#{data['hname'].strip}: #{data['price']} (#{data['diff']}%)"
+      "#{response['hname'].strip}: #{response['price']} (#{response['diff']}%)"
     end
     ::XingAPI::logger.info { result['message'].join(', ') }
     sleep 10
@@ -55,9 +55,9 @@ end
 if false
   3.times do
     result = api.tr_t1901('122630')
-    data = result['data'].last
+    response = result['response'].last
     ::XingAPI::logger.info do
-      "#{data['hname'].strip}: #{data['price']} (#{data['diff']}%)"
+      "#{response['hname'].strip}: #{response['price']} (#{response['diff']}%)"
     end
     sleep 2
   end

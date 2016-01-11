@@ -117,7 +117,7 @@ module XingAPI
     end
 
     def tr(tr_name, is_continue=false, **input)
-      result = { data: [], message: [] }
+      result = { response: [], message: [] }
 
       in_block = ::XingAPI.const_get(:"STRUCT_#{tr_name}InBlock").new
       in_block.assign(input)
@@ -133,7 +133,7 @@ module XingAPI
           recv = RECV_PACKET.of(lparam)
           ::XingAPI::logger.debug { "recv: #{recv.to_hash}" }
           ::XingAPI::logger.debug { "recv: #{recv}" }
-          result[:data].push recv.data.to_hash
+          result[:response].push recv.data.to_hash
           ::XingAPI::logger.debug { "recv.data: #{recv.data.to_hash}" }
         when 2
           ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Message" }
