@@ -13,13 +13,13 @@ end
 
 api = XingAPI::Connector.new
 STDOUT.sync = true
-if true
+if false
   result = api.tr_t1903('122630')
   ::XingAPI::logger.info do
     result
   end
 end
-if true
+if false
   sleep 2
   result = api.tr_t1903('122630', '20150101')
   ::XingAPI::logger.info do
@@ -27,7 +27,7 @@ if true
   end
 end
 if false
-  result = api.tr_t1901('122630')
+  result = api.tr('t1901', shcode: '122630')
   response = result['response'].last
   ::XingAPI::logger.info do
     "#{response['hname'].strip}: #{response['price']} (#{response['diff']}%)"
@@ -36,7 +36,7 @@ end
 if false
   loop do
     # ::XingAPI::logger.info { "account: #{api.account(0)}" }
-    result = api.tr_t1901('122630')
+    result = api.tr('t1901', shcode: '122630')
     response = result['response'].last
     ::XingAPI::logger.info do
       "#{response['hname'].strip}: #{response['price']} (#{response['diff']}%)"
@@ -54,7 +54,7 @@ if false
 end
 if false
   3.times do
-    result = api.tr_t1901('122630')
+    result = api.ttr('t1901', shcode: '122630')
     response = result['response'].last
     ::XingAPI::logger.info do
       "#{response['hname'].strip}: #{response['price']} (#{response['diff']}%)"

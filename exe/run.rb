@@ -5,6 +5,17 @@ require 'xingAPI'
 require 'xingAPI/api'
 require 'multi_json'
 
+def to_symbol(value)
+  case value
+  when Array
+    value.map { |v| to_symbol(v) }
+  when Hash
+    Hash[value.map { |key, value| [key.to_sym, to_symbol(value)] }]
+  else
+    value
+  end
+end
+
 STDIN.sync = true
 STDOUT.sync = true
 
@@ -15,6 +26,7 @@ XingAPI::API.new(ENV['TRADE_IP'], ENV['TRADE_PORT'], ENV['ID'], ENV['PASS'], ENV
     end
   end)
   loop do
-    puts MultiJson.dump(api.send(*MultiJson.load(gets)))
+  	args = to_symbol(MultiJson.load(gets))
+    puts MultiJson.dump(api.send(*args))
   end
 end
