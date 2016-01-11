@@ -85,7 +85,8 @@ module XingAPI
 
     def tr_t1903(shcode, date = '')
       tr(
-        't1903', !date.empty?,
+        't1903',
+        is_continue: !date.empty?,
         shcode: shcode, date: date)
     end
 
@@ -116,7 +117,8 @@ module XingAPI
       )
     end
 
-    def tr(tr_name, is_continue=false, **input)
+    def tr(tr_name, **input)
+      is_continue = input.delete(:is_continue) || false
       result = { response: [], message: [] }
 
       in_block = ::XingAPI.const_get(:"STRUCT_#{tr_name}InBlock").new

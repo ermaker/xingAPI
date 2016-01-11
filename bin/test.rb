@@ -13,13 +13,13 @@ end
 
 api = XingAPI::Connector.new
 STDOUT.sync = true
-if false
+if true
   result = api.tr_t1903('122630')
   ::XingAPI::logger.info do
     result
   end
 end
-if false
+if true
   sleep 2
   result = api.tr_t1903('122630', '20150101')
   ::XingAPI::logger.info do
