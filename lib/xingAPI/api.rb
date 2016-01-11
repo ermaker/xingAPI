@@ -87,6 +87,16 @@ module XingAPI
       end
     end
 
+    def tr_t1903(shcode, date = '')
+      shcode = shcode.to_s
+      date = date.to_s
+
+      tr('t1903', !date.empty?) do |in_block|
+        in_block[:shcode].to_ptr.write_string(shcode)
+        in_block[:date].to_ptr.write_string(date.ljust(8))
+      end
+    end
+
     SELL_OR_BUY = {sell: '1', buy: '2'}
 
     def tr_CSPAT00600(account, account_pass, shcode, qty, sell_or_buy)
@@ -118,13 +128,13 @@ module XingAPI
       end
     end
 
-    def tr(tr_name)
+    def tr(tr_name, is_continue=false)
       result = {}
 
       in_block = ::XingAPI.const_get(:"STRUCT_#{tr_name}InBlock").new
       yield in_block
 
-      request_id = XingAPI.ETK_Request(hwnd, tr_name, in_block, in_block.size, false, nil, 1)
+      request_id = XingAPI.ETK_Request(hwnd, tr_name, in_block, in_block.size, is_continue, nil, 1)
       ::XingAPI::logger.debug { "request_id: #{request_id}" }
 
       loop do
@@ -133,6 +143,7 @@ module XingAPI
         when 1
           ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Data" }
           recv = RECV_PACKET.of(lparam)
+          ::XingAPI::logger.debug { "recv: #{recv.to_hash}" }
           ::XingAPI::logger.debug { "recv: #{recv}" }
           result[:data] = recv.data.to_hash
           ::XingAPI::logger.debug { "result: #{result}" }

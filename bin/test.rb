@@ -14,6 +14,23 @@ end
 api = XingAPI::Connector.new
 STDOUT.sync = true
 if false
+  result = api.tr_t1903('122630')
+  ::XingAPI::logger.info do
+    result
+  end
+  sleep 2
+  result = api.tr_t1903('122630', '20150101')
+  ::XingAPI::logger.info do
+    result
+  end
+end
+if false
+  result = api.tr_t1901('122630')
+  ::XingAPI::logger.info do
+    "#{result['data']['hname'].strip}: #{result['data']['price']} (#{result['data']['diff']}%)"
+  end
+end
+if false
   loop do
     # ::XingAPI::logger.info { "account: #{api.account(0)}" }
     result = api.tr_t1901('122630')

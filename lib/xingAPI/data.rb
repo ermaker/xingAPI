@@ -6,6 +6,17 @@ module XingAPI
       new(FFI::Pointer.new(pointer))
     end
 
+    def self.array_of(pointer, total_size)
+      pointer_ = FFI::Pointer.new(self, pointer)
+      (total_size / size).times.map do |idx|
+        of(pointer_[idx])
+      end.extend(Module.new do
+        def to_hash
+          map(&:to_hash)
+        end
+      end)
+    end
+
     def members
       super.reject do |member|
         member.to_s.start_with?('_') || member == :eos
@@ -68,24 +79,45 @@ module XingAPI
       end
     end
 
-    def data
-      klass = ::XingAPI.const_get("STRUCT_#{szTrCode}OutBlock")
-      if nDataLength != klass.size
+    def klass_
+      if szBlockName.empty?
+        ::XingAPI.const_get("STRUCT_#{szTrCode}OutBlock")
+      else
+        ::XingAPI.const_get("STRUCT_#{szBlockName}")
+      end
+    end
+
+    def check_size(klass)
+      unless (nDataLength % klass.size).zero?
         ::XingAPI::logger.warn do
-          'Size is different:' \
-          "nDataLength(#{nDataLength}) != klass.size(#{klass.size})"
+          'Align failed. ' \
+          "klass.size: #{klass.size}, nDataLength: #{nDataLength}"
         end
       end
+    end
+
+    def data
+      klass = klass_
       if nDataLength == 0
         ::XingAPI::logger.warn { 'Size is 0'}
-        NilData.new
+        return NilData.new
+      end
+
+      check_size(klass)
+
+      case nDataMode
+      when 1
+        klass.of(lpData)
+      when 2
+        klass.array_of(lpData, nDataLength)
       else
+        ::XingAPI::logger.warn { "Unknown nDataMode: #{nDataMode}" }
         klass.of(lpData)
       end
     end
 
     def to_s
-      %{[#{szTrCode}] "#{szBlockName}" (#{nDataLength})}
+      %{[#{nRqID}] #{szTrCode} "#{szBlockName}" #{nDataMode}, #{cCont} (#{nDataLength})}
     end
   end
 
