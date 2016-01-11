@@ -28,18 +28,20 @@ if false
 end
 if false
   result = api.tr_t1901('122630')
+  data = result['data'].last
   ::XingAPI::logger.info do
-    "#{result['data']['hname'].strip}: #{result['data']['price']} (#{result['data']['diff']}%)"
+    "#{data['hname'].strip}: #{data['price']} (#{data['diff']}%)"
   end
 end
 if false
   loop do
     # ::XingAPI::logger.info { "account: #{api.account(0)}" }
     result = api.tr_t1901('122630')
+    data = result['data'].last
     ::XingAPI::logger.info do
-      "#{result['data']['hname'].strip}: #{result['data']['price']} (#{result['data']['diff']}%)"
+      "#{data['hname'].strip}: #{data['price']} (#{data['diff']}%)"
     end
-    ::XingAPI::logger.info { result['message'] }
+    ::XingAPI::logger.info { result['message'].join(', ') }
     sleep 10
   end
 end
@@ -48,13 +50,14 @@ if false
 end
 if false
   result = api.tr_CSPAT00600(ENV['ACCOUNT'], ENV['ACCOUNT_PASS'], '114800', 1, :sell)
-  ::XingAPI::logger.info { result['message'] }
+  ::XingAPI::logger.info { result['message'].join(', ') }
 end
 if false
   3.times do
     result = api.tr_t1901('122630')
+    data = result['data'].last
     ::XingAPI::logger.info do
-      "#{result['data']['hname'].strip}: #{result['data']['price']} (#{result['data']['diff']}%)"
+      "#{data['hname'].strip}: #{data['price']} (#{data['diff']}%)"
     end
     sleep 2
   end
