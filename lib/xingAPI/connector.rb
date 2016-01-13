@@ -27,8 +27,8 @@ module XingAPI
       run_(*args)
       retval = Timeout.timeout(10) { @stdout.gets }
       MultiJson.load(retval)
-    rescue Timeout::Error
-      ::XingAPI::logger.warn { "Timeout: #{args}" }
+    rescue Timeout::Error, Errno::EPIPE => e
+      ::XingAPI::logger.warn { "#{e.class} (#{e.message}): #{args}" }
       reopen
       retry
     end
@@ -38,9 +38,9 @@ module XingAPI
     end
 
     def finish_
-      @stdin.close
-      @stdout.close
-      @wait.terminate
+      @wait.terminate rescue nil
+      @stdin.close rescue nil
+      @stdout.close rescue nil
     end
 
     def finish
