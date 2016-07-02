@@ -4,6 +4,7 @@ Dotenv.load
 require 'xingAPI'
 require 'xingAPI/api'
 require 'multi_json'
+require 'string-scrub'
 
 def to_scrub(value)
   case value
