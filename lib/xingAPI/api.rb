@@ -101,7 +101,7 @@ module XingAPI
       price = 0
 
       tr(
-        'CSPAT00600', 
+        'CSPAT00600',
         'STRUCT_CSPAT00600InBlock1': {
           AcntNo: account,
           InptPwd: account_pass,
