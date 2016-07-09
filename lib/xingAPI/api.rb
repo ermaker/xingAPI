@@ -22,9 +22,11 @@ module XingAPI
       end
     end
 
+    MESSAGE_ID = 1024
+
     def connect_(ip, port)
       ::XingAPI::logger.info { "ip: #{ip}" }
-      result = XingAPI.ETK_Connect(hwnd, ip, port.to_i, 1024, -1, 512)
+      result = XingAPI.ETK_Connect(hwnd, ip, port.to_i, MESSAGE_ID, -1, 512)
       if result
         ::XingAPI::logger.debug { "connect: #{result}" }
       else
@@ -117,6 +119,12 @@ module XingAPI
       )
     end
 
+    XM_DISCONNECT = MESSAGE_ID + 1
+    XM_RECEIVE_DATA = MESSAGE_ID + 3
+    XM_TIMEOUT = MESSAGE_ID + 7
+
+    HANDLE_MESSAGES = [XM_DISCONNECT, XM_RECEIVE_DATA, XM_TIMEOUT]
+
     def tr(tr_name, **input)
       is_continue = input.delete(:is_continue) || false
       result = { response: [], message: [] }
@@ -128,34 +136,46 @@ module XingAPI
       ::XingAPI::logger.debug { "request_id: #{request_id}" }
 
       loop do
-        _, _, wparam, lparam = @win.resume { |_, msgid, _, _| msgid == 1024 + 3}
-        case wparam
-        when 1
-          ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Data" }
-          recv = RECV_PACKET.of(lparam)
-          ::XingAPI::logger.debug { "recv: #{recv.to_hash}" }
-          ::XingAPI::logger.debug { "recv: #{recv}" }
-          result[:response].push recv.data.to_hash
-          ::XingAPI::logger.debug { "recv.data: #{recv.data.to_hash}" }
-        when 2
-          ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Message" }
-          msg = MSG_PACKET.of(lparam)
-          result[:message].push msg.to_s
-          ::XingAPI::logger.debug { msg.to_s }
-          XingAPI.ETK_ReleaseMessageData(lparam)
-        when 3
-          ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Error" }
-          msg = MSG_PACKET.of(lparam)
-          result[:message].push msg.to_s
-          ::XingAPI::logger.debug { msg.to_s }
-          XingAPI.ETK_ReleaseMessageData(lparam)
+        _, msgid, wparam, lparam = @win.resume { |_, msgid, _, _| HANDLE_MESSAGES.include?(msgid) }
+        case msgid
+        when XM_RECEIVE_DATA
+          case wparam
+          when 1
+            ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Data" }
+            recv = RECV_PACKET.of(lparam)
+            ::XingAPI::logger.debug { "recv: #{recv.to_hash}" }
+            ::XingAPI::logger.debug { "recv: #{recv}" }
+            result[:response].push recv.data.to_hash
+            ::XingAPI::logger.debug { "recv.data: #{recv.data.to_hash}" }
+          when 2
+            ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Message" }
+            msg = MSG_PACKET.of(lparam)
+            result[:message].push msg.to_s
+            ::XingAPI::logger.debug { msg.to_s }
+            XingAPI.ETK_ReleaseMessageData(lparam)
+          when 3
+            ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Error" }
+            msg = MSG_PACKET.of(lparam)
+            result[:message].push msg.to_s
+            ::XingAPI::logger.debug { msg.to_s }
+            XingAPI.ETK_ReleaseMessageData(lparam)
+            break
+          when 4
+            ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Release (#{lparam})" }
+            XingAPI.ETK_ReleaseRequestData(lparam)
+            break
+          else
+            ::XingAPI::logger.warn { "WM_RECEIVE_DATA: Unknown case! (#{wparam})" }
+          end
+        when XM_DISCONNECT
+          ::XingAPI::logger.warn { 'XM_DISCONNECT' }
+          result[:message].push '[-4225] XM_DISCONNECT'
           break
-        when 4
-          ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Release (#{lparam})" }
+        when XM_TIMEOUT
+          ::XingAPI::logger.warn { "XM_TIMEOUT: Release (#{lparam})" }
+          result[:message].push "[-4226] XM_TIMEOUT(#{lparam})"
           XingAPI.ETK_ReleaseRequestData(lparam)
           break
-        else
-          ::XingAPI::logger.warn { "WM_RECEIVE_DATA: Unknown case! (#{wparam})" }
         end
       end
 
