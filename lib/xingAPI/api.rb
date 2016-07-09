@@ -22,9 +22,11 @@ module XingAPI
       end
     end
 
+    MESSAGE_ID = 1024
+
     def connect_(ip, port)
       ::XingAPI::logger.info { "ip: #{ip}" }
-      result = XingAPI.ETK_Connect(hwnd, ip, port.to_i, 1024, -1, 512)
+      result = XingAPI.ETK_Connect(hwnd, ip, port.to_i, MESSAGE_ID, -1, 512)
       if result
         ::XingAPI::logger.debug { "connect: #{result}" }
       else
@@ -117,6 +119,8 @@ module XingAPI
       )
     end
 
+    XM_RECEIVE_DATA = MESSAGE_ID + 3
+
     def tr(tr_name, **input)
       is_continue = input.delete(:is_continue) || false
       result = { response: [], message: [] }
@@ -128,7 +132,7 @@ module XingAPI
       ::XingAPI::logger.debug { "request_id: #{request_id}" }
 
       loop do
-        _, _, wparam, lparam = @win.resume { |_, msgid, _, _| msgid == 1024 + 3}
+        _, _, wparam, lparam = @win.resume { |_, msgid, _, _| msgid == XM_RECEIVE_DATA }
         case wparam
         when 1
           ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Data" }
