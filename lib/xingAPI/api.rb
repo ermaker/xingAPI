@@ -121,6 +121,8 @@ module XingAPI
 
     XM_RECEIVE_DATA = MESSAGE_ID + 3
 
+    HANDLE_MESSAGES = [XM_RECEIVE_DATA]
+
     def tr(tr_name, **input)
       is_continue = input.delete(:is_continue) || false
       result = { response: [], message: [] }
@@ -132,7 +134,7 @@ module XingAPI
       ::XingAPI::logger.debug { "request_id: #{request_id}" }
 
       loop do
-        _, _, wparam, lparam = @win.resume { |_, msgid, _, _| msgid == XM_RECEIVE_DATA }
+        _, _, wparam, lparam = @win.resume { |_, msgid, _, _| HANDLE_MESSAGES.include?(msgid) }
         case wparam
         when 1
           ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Data" }
