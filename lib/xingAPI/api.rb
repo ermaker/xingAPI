@@ -134,6 +134,8 @@ module XingAPI
 
     HANDLE_MESSAGES = [XM_DISCONNECT, XM_RECEIVE_DATA, XM_TIMEOUT]
 
+    RECONNECT_MESSAGE_CODES = ['-10054', '   -2']
+
     def tr(tr_name, **input)
       is_continue = input.delete(:is_continue) || false
       result = { response: [], message: [] }
@@ -168,7 +170,7 @@ module XingAPI
             result[:message].push msg.to_s
             ::XingAPI::logger.debug { msg.to_s }
             XingAPI.ETK_ReleaseMessageData(lparam)
-            if msg.szMsgCode == '   -2'
+            if RECONNECT_MESSAGE_CODES.include?(msg.szMsgCode)
               logout_
               disconnect_
               connect_and_login
