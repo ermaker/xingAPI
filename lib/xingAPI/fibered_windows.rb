@@ -13,8 +13,8 @@ module XingAPI
           ::XingAPI::logger.debug { "WM: #{args}" }
           begin
             Fiber.yield(*args)
-          rescue FiberError
-            ::XingAPI::logger.warn { 'FiberError' }
+          rescue FiberError => e
+            ::XingAPI::logger.warn { e.inspect }
           end
         end
         :finish
