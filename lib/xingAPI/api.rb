@@ -9,24 +9,33 @@ module XingAPI
     attr_reader :win
     def_delegators :@win, :hwnd
 
-    def initialize(ip, port, id, pass, pass2)
+    def initialize(ip, port, id, pass, pass2, &blk)
+      @ip = ip
+      @port = port.to_i
+      @id = id
+      @pass = pass
+      @pass2 = pass2
       @win = FiberedWindows.new
+      connect_and_login(&blk)
+    end
+
+    def connect_and_login
       if block_given?
-        connect(ip, port) do
-          login(id, pass, pass2) do
+        connect do
+          login do
             yield self
           end
         end
       else
-        connect_(ip, port) && login_(id, pass, pass2)
+        connect_ && login_
       end
     end
 
     MESSAGE_ID = 1024
 
-    def connect_(ip, port)
-      ::XingAPI::logger.info { "ip: #{ip}" }
-      result = XingAPI.ETK_Connect(hwnd, ip, port.to_i, MESSAGE_ID, -1, 512)
+    def connect_
+      ::XingAPI::logger.info { "ip: #{@ip}" }
+      result = XingAPI.ETK_Connect(hwnd, @ip, @port, MESSAGE_ID, -1, 512)
       if result
         ::XingAPI::logger.debug { "connect: #{result}" }
       else
@@ -40,8 +49,8 @@ module XingAPI
       ::XingAPI::logger.debug { 'disconnect' }
     end
 
-    def connect(ip, port)
-      yield if connect_(ip, port)
+    def connect
+      yield if connect_
     ensure
       disconnect_
     end
@@ -50,8 +59,8 @@ module XingAPI
       FFI::Pointer.new(pointer).read_string.force_encoding('cp949')
     end
 
-    def login_(id, pass, pass2)
-      result = XingAPI.ETK_Login(hwnd, id, pass, pass2, 0, false)
+    def login_
+      result = XingAPI.ETK_Login(hwnd, @id, @pass, @pass2, 0, false)
       if result
         ::XingAPI::logger.debug { "login: #{result}" }
       else
@@ -75,8 +84,8 @@ module XingAPI
       ::XingAPI::logger.debug { "logout: #{hwnd}" }
     end
 
-    def login(id, pass, pass2)
-      yield if login_(id, pass, pass2)
+    def login
+      yield if login_
     ensure
       logout_
     end
@@ -125,6 +134,8 @@ module XingAPI
 
     HANDLE_MESSAGES = [XM_DISCONNECT, XM_RECEIVE_DATA, XM_TIMEOUT]
 
+    RECONNECT_MESSAGE_CODES = ['-10054', '   -2']
+
     def tr(tr_name, **input)
       is_continue = input.delete(:is_continue) || false
       result = { response: [], message: [] }
@@ -159,6 +170,11 @@ module XingAPI
             result[:message].push msg.to_s
             ::XingAPI::logger.debug { msg.to_s }
             XingAPI.ETK_ReleaseMessageData(lparam)
+            if RECONNECT_MESSAGE_CODES.include?(msg.szMsgCode)
+              logout_
+              disconnect_
+              connect_and_login
+            end
             break
           when 4
             ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Release (#{lparam})" }
@@ -170,6 +186,9 @@ module XingAPI
         when XM_DISCONNECT
           ::XingAPI::logger.warn { 'XM_DISCONNECT' }
           result[:message].push '[-4225] XM_DISCONNECT'
+          logout_
+          disconnect_
+          connect_and_login
           break
         when XM_TIMEOUT
           ::XingAPI::logger.warn { "XM_TIMEOUT: Release (#{lparam})" }
