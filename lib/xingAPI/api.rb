@@ -168,6 +168,11 @@ module XingAPI
             result[:message].push msg.to_s
             ::XingAPI::logger.debug { msg.to_s }
             XingAPI.ETK_ReleaseMessageData(lparam)
+            if msg.szMsgCode == '   -2'
+              logout_
+              disconnect_
+              connect_and_login
+            end
             break
           when 4
             ::XingAPI::logger.debug { "WM_RECEIVE_DATA: Release (#{lparam})" }
