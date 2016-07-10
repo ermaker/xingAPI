@@ -186,6 +186,7 @@ module XingAPI
         when XM_DISCONNECT
           ::XingAPI::logger.warn { 'XM_DISCONNECT' }
           result[:message].push '[-4225] XM_DISCONNECT'
+          logout_
           disconnect_
           connect_and_login
           break
